@@ -33,6 +33,7 @@ package no.nordicsemi.kotlin.ble.client.android.internal
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.os.Build
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +49,8 @@ import no.nordicsemi.kotlin.ble.core.BondState
 import no.nordicsemi.kotlin.ble.core.ConnectionState
 import no.nordicsemi.kotlin.ble.core.Phy
 import no.nordicsemi.kotlin.ble.core.PhyOption
+import java.io.IOException
+import java.io.OutputStream
 
 /**
  * A native implementation of [Peripheral.Executor] for Android.
@@ -232,6 +235,33 @@ internal class NativeExecutor(
             } catch (_: Exception) {
                 // Ignore
             }
+        }
+        cocChannels.forEach { (psm, _) ->
+            closeCocChannel(psm)
+        }
+        cocChannels.clear()
+    }
+
+    private val cocChannels = mutableMapOf<Int, BluetoothSocket>()
+
+    override fun createCocChannel(psm: Int): OutputStream? {
+        cocChannels[psm]?.let {
+            if (it.isConnected) {
+                return it.outputStream
+            } else {
+                closeCocChannel(psm)
+            }
+        }
+        val sock = bluetoothDevice.createInsecureL2capChannel(psm)
+        sock.connect()
+        cocChannels[psm] = sock
+        return sock.outputStream
+    }
+
+    override fun closeCocChannel(psm: Int) {
+        cocChannels[psm]?.let{
+            it.close()
+            cocChannels.remove(psm)
         }
     }
 }

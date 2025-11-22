@@ -61,6 +61,8 @@ import no.nordicsemi.kotlin.ble.core.Peer
 import no.nordicsemi.kotlin.ble.core.Phy
 import no.nordicsemi.kotlin.ble.core.WriteType
 import org.slf4j.LoggerFactory
+import java.io.InputStream
+import java.io.OutputStream
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
@@ -189,6 +191,21 @@ abstract class Peripheral<ID: Any, EX: Peripheral.Executor<ID>>(
          * @throws SecurityException If BLUETOOTH_CONNECT permission is denied.
          */
         fun close()
+
+        fun createCocChannel(psm: Int): OutputStream? {
+            TODO("createCocChannel not implemented")
+        }
+
+        fun closeCocChannel(psm: Int) {
+            TODO("closeCocChannel not implemented")
+        }
+    }
+    fun createCocChannel(psm: Int): OutputStream? {
+        return impl.createCocChannel(psm)
+    }
+
+    fun closeCocChannel(psm: Int) {
+        return closeCocChannel(psm)
     }
 
     /**
@@ -543,6 +560,8 @@ abstract class Peripheral<ID: Any, EX: Peripheral.Executor<ID>>(
             logger.info("Disconnected from {}", this)
         }
     }
+
+
 
     // Other
 

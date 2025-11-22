@@ -71,6 +71,8 @@ import no.nordicsemi.kotlin.ble.core.PhyInUse
 import no.nordicsemi.kotlin.ble.core.PhyOption
 import no.nordicsemi.kotlin.ble.core.WriteType
 import org.slf4j.LoggerFactory
+import java.io.InputStream
+import java.io.OutputStream
 import kotlin.math.min
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
