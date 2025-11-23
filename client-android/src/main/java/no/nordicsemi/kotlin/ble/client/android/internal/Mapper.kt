@@ -35,6 +35,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothSocket
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanRecord
 import android.os.Build
@@ -54,6 +55,7 @@ import no.nordicsemi.kotlin.ble.core.OperationStatus
 import no.nordicsemi.kotlin.ble.core.Phy
 import no.nordicsemi.kotlin.ble.core.PhyOption
 import no.nordicsemi.kotlin.ble.core.PrimaryPhy
+import no.nordicsemi.kotlin.ble.core.SocketType
 import no.nordicsemi.kotlin.ble.core.WriteType
 import java.util.UUID
 import kotlin.uuid.ExperimentalUuidApi
@@ -72,6 +74,14 @@ internal fun Int.toBondState(): BondState = when (this) {
     BluetoothDevice.BOND_BONDED -> BondState.BONDED
     BluetoothDevice.BOND_BONDING -> BondState.BONDING
     else -> BondState.NONE
+}
+
+internal fun Int.toSocketType(): SocketType = when (this) {
+    BluetoothSocket.TYPE_L2CAP -> SocketType.L2CAP
+    BluetoothSocket.TYPE_LE -> SocketType.LE
+    BluetoothSocket.TYPE_RFCOMM -> SocketType.RFCOMM
+    BluetoothSocket.TYPE_SCO -> SocketType.SCO
+    else -> SocketType.UNKNOWN
 }
 
 internal fun Int.toConnectionState(status: Int): ConnectionState = when (this) {

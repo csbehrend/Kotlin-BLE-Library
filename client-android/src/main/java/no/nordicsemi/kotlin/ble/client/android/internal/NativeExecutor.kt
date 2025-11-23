@@ -50,7 +50,9 @@ import no.nordicsemi.kotlin.ble.core.ConnectionState
 import no.nordicsemi.kotlin.ble.core.Phy
 import no.nordicsemi.kotlin.ble.core.PhyOption
 import java.io.IOException
+import java.io.InputStream
 import java.io.OutputStream
+import android.util.Log
 
 /**
  * A native implementation of [Peripheral.Executor] for Android.
@@ -244,18 +246,20 @@ internal class NativeExecutor(
 
     private val cocChannels = mutableMapOf<Int, BluetoothSocket>()
 
-    override fun createCocChannel(psm: Int): OutputStream? {
+    override fun openCocChannel(psm: Int): Pair<InputStream?, OutputStream?> {
         cocChannels[psm]?.let {
             if (it.isConnected) {
-                return it.outputStream
+                return Pair(it.inputStream, it.outputStream)
             } else {
                 closeCocChannel(psm)
             }
+            cocChannels.remove(psm)
         }
         val sock = bluetoothDevice.createInsecureL2capChannel(psm)
         sock.connect()
         cocChannels[psm] = sock
-        return sock.outputStream
+        Log.i("test", "MTU size of " + sock.maxTransmitPacketSize)
+        return Pair(sock.inputStream, sock.outputStream)
     }
 
     override fun closeCocChannel(psm: Int) {

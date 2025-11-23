@@ -192,20 +192,20 @@ abstract class Peripheral<ID: Any, EX: Peripheral.Executor<ID>>(
          */
         fun close()
 
-        fun createCocChannel(psm: Int): OutputStream? {
-            TODO("createCocChannel not implemented")
+        fun openCocChannel(psm: Int): Pair<InputStream?, OutputStream?> {
+            TODO("openCocChannel not implemented")
         }
 
         fun closeCocChannel(psm: Int) {
             TODO("closeCocChannel not implemented")
         }
     }
-    fun createCocChannel(psm: Int): OutputStream? {
-        return impl.createCocChannel(psm)
+    fun openCocChannel(psm: Int): Pair<InputStream?, OutputStream?> {
+        return impl.openCocChannel(psm)
     }
 
     fun closeCocChannel(psm: Int) {
-        return closeCocChannel(psm)
+        return impl.closeCocChannel(psm)
     }
 
     /**
