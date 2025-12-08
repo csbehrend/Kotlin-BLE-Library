@@ -34,6 +34,7 @@ package no.nordicsemi.kotlin.ble.client.android.internal
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothSocket
+import android.bluetooth.BluetoothSocketException
 import android.content.Context
 import android.os.Build
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +54,11 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import android.util.Log
+import no.nordicsemi.kotlin.ble.client.exception.ConnectionFailedException
+import no.nordicsemi.kotlin.ble.client.exception.coc.CocChannelUnavailable
+import no.nordicsemi.kotlin.ble.client.exception.coc.CocReadFailed
+import no.nordicsemi.kotlin.ble.client.exception.coc.CocWriteFailed
+import kotlin.jvm.Throws
 
 /**
  * A native implementation of [Peripheral.Executor] for Android.
@@ -246,26 +252,49 @@ internal class NativeExecutor(
 
     private val cocChannels = mutableMapOf<Int, BluetoothSocket>()
 
-    override fun openCocChannel(psm: Int): Pair<InputStream?, OutputStream?> {
-        cocChannels[psm]?.let {
-            if (it.isConnected) {
-                return Pair(it.inputStream, it.outputStream)
-            } else {
-                closeCocChannel(psm)
-            }
-            cocChannels.remove(psm)
+    override fun openCocChannel(psm: Int) {
+        try {
+            val sock = cocChannels.getOrPut(psm) { bluetoothDevice.createInsecureL2capChannel(psm) }
+            assert(!sock.isConnected)
+            sock.connect()
+        } catch (e: IOException) {
+            Log.e("BLE-COC", "openCocChannel, IOException: $e")
+            throw CocChannelUnavailable()
+        } catch (e: BluetoothSocketException) {
+            Log.e("BLE-COC", "openCocChannel, BluetoothSocketException: $e")
+            throw CocChannelUnavailable()
         }
-        val sock = bluetoothDevice.createInsecureL2capChannel(psm)
-        sock.connect()
-        cocChannels[psm] = sock
-        Log.i("test", "MTU size of " + sock.maxTransmitPacketSize)
-        return Pair(sock.inputStream, sock.outputStream)
     }
 
     override fun closeCocChannel(psm: Int) {
         cocChannels[psm]?.let{
             it.close()
             cocChannels.remove(psm)
+        }
+    }
+
+    override fun writeToCocChannel(psm: Int, data: ByteArray) {
+        val sock = cocChannels[psm] ?: throw CocChannelUnavailable()
+        try {
+            val out = sock.outputStream ?: throw CocChannelUnavailable()
+            out.write(data)
+        } catch (e: IOException) {
+            Log.e("BLE-COC", "writeToCocChannel, IOException: $e")
+            throw CocWriteFailed()
+        }
+    }
+
+    override fun readFromCocChannel(psm: Int, size: Int): ByteArray {
+        val sock = cocChannels[psm] ?: throw CocChannelUnavailable()
+        if (!sock.isConnected) throw CocChannelUnavailable()
+        try {
+            val inStream = sock.inputStream ?: throw CocChannelUnavailable()
+            val data = ByteArray(size)
+            inStream.read(data)
+            return data
+        } catch (e: IOException) {
+            Log.e("BLE-COC", "readToCocChannel, IOException: $e")
+            throw CocReadFailed()
         }
     }
 }
