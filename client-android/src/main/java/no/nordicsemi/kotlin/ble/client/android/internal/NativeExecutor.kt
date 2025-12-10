@@ -277,7 +277,15 @@ internal class NativeExecutor(
         val sock = cocChannels[psm] ?: throw CocChannelUnavailable()
         try {
             val out = sock.outputStream ?: throw CocChannelUnavailable()
-            out.write(data)
+            val block = sock.maxTransmitPacketSize
+            val lastOffset = data.size - (data.size % block)
+            val lastLen = data.size % block
+            for (i in 0..<lastOffset step block) {
+                out.write(data, i, block)
+            }
+            if (lastLen > 0) {
+                out.write(data, lastOffset, lastLen)
+            }
         } catch (e: IOException) {
             Log.e("BLE-COC", "writeToCocChannel, IOException: $e")
             throw CocWriteFailed()

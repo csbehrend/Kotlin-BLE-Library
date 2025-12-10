@@ -49,6 +49,9 @@ nordicNexusPublishing {
 
 android {
     namespace = "no.nordicsemi.kotlin.ble.client.android"
+    defaultConfig {
+        minSdk = 29
+    }
 }
 
 dependencies {

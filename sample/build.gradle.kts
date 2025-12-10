@@ -7,6 +7,8 @@ android {
     namespace = "no.nordicsemi.kotlin.ble.android.sample"
     defaultConfig {
         applicationId = "no.nordicsemi.kotlin.ble.android.sample"
+        targetSdk = 36
+        minSdk = 29
     }
     androidResources {
         localeFilters += listOf("en")
@@ -20,6 +22,9 @@ android {
         create("mock") {
             dimension = "mode"
         }
+    }
+    compileSdk {
+        version = release(36)
     }
 }
 
